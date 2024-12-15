@@ -5,23 +5,36 @@ on:
     branches:
       - main
 
-
 jobs:
   build:
     name: Build and analyze
     runs-on: ubuntu-latest
-    
+
     steps:
-      - uses: actions/checkout@v4
+      # Step 1: Checkout the code
+      - name: Checkout Code
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      - uses: sonarsource/sonarqube-scan-action@v4
+          fetch-depth: 0 # Full history is required for accurate SonarQube analysis
+
+      # Step 2: Setup Java (SonarQube requires Java to run the scanner)
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17' # Ensure this matches the version supported by SonarQube
+          distribution: 'temurin'
+
+      # Step 3: Run SonarQube scan
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@v4
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-      # If you wish to fail your job when the Quality Gate is red, uncomment the
-      # following lines. This would typically be used to fail a deployment.
-      # - uses: sonarsource/sonarqube-quality-gate-action@v1
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # Token stored in GitHub Secrets
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }} # Host URL stored in GitHub Secrets
+
+      # Step 4: (Optional) Fail the build if the Quality Gate fails
+      # Uncomment this section if you'd like the build to fail based on the Quality Gate status
+      # - name: Check Quality Gate
+      #   uses: sonarsource/sonarqube-quality-gate-action@v1
       #   timeout-minutes: 5
       #   env:
       #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
